@@ -57,28 +57,26 @@ form.addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
 
   try {
-    // Skicka till Formspree (ersätt YOUR_FORM_ID med ditt Formspree form-ID)
-    const response = await fetch('https://formspree.io/f/YOUR_FORM_ID', {
+    // Skicka till egen PHP-backend
+    const response = await fetch('/api/subscribe.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        email,
-        _subject: 'Ny lanseringsanmälan - Ekonomiappen.se',
-        timestamp: new Date().toISOString()
-      })
+      body: JSON.stringify({ email })
     });
 
-    if (response.ok) {
+    const result = await response.json();
+    
+    if (response.ok && result.success) {
       // Spara även lokalt som backup
       const existing = readPersist('notifyList', []);
       if (!existing.includes(email)) {
         existing.push(email);
         persist('notifyList', existing);
       }
-      showMessage('Tack! Du är nu med på lanseringslistan.');
+      showMessage(result.message || 'Tack! Du är nu med på lanseringslistan.');
       form.reset();
     } else {
-      throw new Error('Serverfel');
+      throw new Error(result.message || 'Serverfel');
     }
   } catch (error) {
     // Fallback: spara endast lokalt om nätverk misslyckas

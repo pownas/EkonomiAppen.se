@@ -32,14 +32,16 @@ themeBtn.addEventListener('click', () => {
   themeBtn.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
 });
 
-// Form för e-postnotifiering – lokal simulering
+// Form för e-postnotifiering – med Formspree backend
 const form = qs('#notifyForm');
 const emailInput = qs('#emailInput');
 const formMessage = qs('#formMessage');
+const submitBtn = form.querySelector('button[type="submit"]');
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = emailInput.value.trim();
+  
   if (!email) {
     showMessage('Fyll i en e-postadress.', true);
     return;
@@ -48,16 +50,52 @@ form.addEventListener('submit', (e) => {
     showMessage('Ogiltig e-postadress.', true);
     return;
   }
-  // Simulera "sparning" i localStorage (ingen backend)
-  const existing = readPersist('notifyList', []);
-  if (!existing.includes(email)) {
-    existing.push(email);
-    persist('notifyList', existing);
-    showMessage('Tack! Du är nu med på lanseringslistan.');
-  } else {
-    showMessage('Denna e-post är redan registrerad.');
+
+  // Visa laddningstillstånd
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = 'Skickar...';
+  submitBtn.disabled = true;
+
+  try {
+    // Skicka till Formspree (ersätt YOUR_FORM_ID med ditt Formspree form-ID)
+    const response = await fetch('https://formspree.io/f/YOUR_FORM_ID', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        email,
+        _subject: 'Ny lanseringsanmälan - Ekonomiappen.se',
+        timestamp: new Date().toISOString()
+      })
+    });
+
+    if (response.ok) {
+      // Spara även lokalt som backup
+      const existing = readPersist('notifyList', []);
+      if (!existing.includes(email)) {
+        existing.push(email);
+        persist('notifyList', existing);
+      }
+      showMessage('Tack! Du är nu med på lanseringslistan.');
+      form.reset();
+    } else {
+      throw new Error('Serverfel');
+    }
+  } catch (error) {
+    // Fallback: spara endast lokalt om nätverk misslyckas
+    console.error('Form submission error:', error);
+    const existing = readPersist('notifyList', []);
+    if (!existing.includes(email)) {
+      existing.push(email);
+      persist('notifyList', existing);
+      showMessage('Tillfälligt nätverksfel – din e-post sparades lokalt.');
+      form.reset();
+    } else {
+      showMessage('Ett fel uppstod. Försök igen senare.', true);
+    }
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
   }
-  form.reset();
 });
 
 function validateEmail(str) {

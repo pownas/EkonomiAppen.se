@@ -1,0 +1,19 @@
+[Unit]
+Description=Ekonomiappen.se API
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/ekonomiappen/api
+ExecStart=/var/www/ekonomiappen/api/EkonomiAppenApi
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=ekonomiappen-api
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target

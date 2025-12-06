@@ -11,10 +11,19 @@
 *.sln.docstates
 *.env
 
-# PHP-specific - känslig databasconfig
+# Känslig konfiguration
 config/database.php
 api/subscribe.php
+api/appsettings.local.json
+api/appsettings.Production.json
 .env.local
+
+# .NET build outputs
+api/bin/
+api/obj/
+api/publish/
+api/*.user
+api/*.suo
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

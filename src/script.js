@@ -57,11 +57,15 @@ form.addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
 
   try {
-    // Skicka till egen PHP-backend
-    const response = await fetch('/api/subscribe.php', {
+    // Skicka till .NET minimal API backend
+    const response = await fetch('http://localhost:5000/api/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ 
+        email,
+        ipAddress: null,
+        userAgent: navigator.userAgent
+      })
     });
 
     const result = await response.json();

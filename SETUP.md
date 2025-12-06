@@ -1,8 +1,8 @@
 # Setup-instruktioner för e-postregistrering
 
-## MySQL + PHP Backend (Nuvarande implementation)
+## .NET 8+ Minimal API Backend (Nuvarande implementation)
 
-Sajten använder en egen PHP-backend som sparar e-postadresser direkt i MySQL-databasen.
+Sajten använder en modern .NET minimal API backend med self-contained deployment som sparar e-postadresser direkt i MySQL-databasen.
 
 ### Steg-för-steg installation:
 
@@ -27,50 +27,113 @@ source /path/to/database/setup.sql
 
 #### 2. Konfigurera databasanslutning
 
-Öppna `api/subscribe.php` och uppdatera dessa rader:
-
-```php
-define('DB_HOST', 'localhost');        // Din MySQL-server
-define('DB_NAME', 'ekonomiappen');     // Databas-namn
-define('DB_USER', 'your_username');    // Ditt MySQL-användarnamn
-define('DB_PASS', 'your_password');    // Ditt MySQL-lösenord
-```
-
-**VIKTIGT:** Lägg till `api/subscribe.php` i `.gitignore` efter att du lagt in riktiga lösenord, eller använd en separat config-fil.
-
-#### 3. Säkerhetsinställningar (Viktigt!)
-
-För produktionsmiljö:
-
-a) **Skapa en separat databaskonfigurationsfil:**
+Kopiera exempelfilen och lägg till riktiga uppgifter:
 
 ```bash
-# Skapa config utanför webroot
-cp api/subscribe.php api/subscribe.php.example
+cd api
+cp appsettings.local.json.example appsettings.local.json
 ```
 
-Skapa `config/database.php` (utanför `src/`):
-```php
-<?php
-return [
-    'host' => 'localhost',
-    'name' => 'ekonomiappen',
-    'user' => 'ekonomiappen_user',
-    'pass' => 'STARKT_LÖSENORD_HÄR'
-];
+Öppna `api/appsettings.local.json` och uppdatera:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=ekonomiappen;User=your_username;Password=YOUR_REAL_PASSWORD;SSL Mode=None;"
+  }
+}
 ```
 
-b) **Uppdatera `.gitignore`:**
-```
-config/database.php
-api/subscribe.php
+**VIKTIGT:** Filen `appsettings.local.json` är redan i `.gitignore` och kommer inte commitas.
+
+#### 3. Bygg och kör API:et
+
+**Development (lokalt):**
+
+```bash
+cd api
+dotnet restore
+dotnet run
 ```
 
-c) **Skapa en dedikerad MySQL-användare:**
+API:et startar på `http://localhost:5000`
+
+**Production (self-contained build):**
+
+```bash
+cd api
+chmod +x build.sh
+./build.sh
+```
+
+Detta skapar en self-contained executable i `api/publish/linux-x64/EkonomiAppenApi`
+
+**Kör self-contained versionen:**
+
+```bash
+cd api/publish/linux-x64
+./EkonomiAppenApi
+```
+
+#### 4. Säkerhetsinställningar (Viktigt!)
+
+**a) Skapa en dedikerad MySQL-användare:**
+
 ```sql
 CREATE USER 'ekonomiappen_user'@'localhost' IDENTIFIED BY 'STARKT_LÖSENORD';
-GRANT SELECT, INSERT, UPDATE ON ekonomiappen.* TO 'ekonomiappen_user'@'localhost';
-FLUSH PRIVILEGES;
+#### 5. Testa installationen
+
+**a) Testa API:et direkt:**
+
+```bash
+# Health check
+curl http://localhost:5000/health
+
+# Registrera e-post
+curl -X POST http://localhost:5000/api/subscribe \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
+
+# Räkna prenumeranter
+curl http://localhost:5000/api/subscriptions/count
+```
+
+**b) Testa via webbläsaren:**
+
+1. Öppna sajten i en webbläsare
+2. Fyll i en test-e-postadress
+3. Kontrollera att den sparades i databasen:
+
+```sql
+SELECT * FROM email_subscriptions;
+```
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=ekonomiappen;User=ekonomiappen_user;Password=PRODUCTION_PASSWORD;SSL Mode=Required;"
+  },
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://localhost:5000"
+      }
+    }
+  }
+}
+```
+
+**c) Systemd service (Linux):**
+
+```bash
+# Kopiera filen
+sudo cp api/ekonomiappen-api.service /etc/systemd/system/
+
+# Uppdatera sökvägar i servicefilen
+sudo nano /etc/systemd/system/ekonomiappen-api.service
+
+#### 6. Hantera registrerade e-postadresser
+sudo systemctl daemon-reload
+sudo systemctl enable ekonomiappen-api
+sudo systemctl start ekonomiappen-api
+sudo systemctl status ekonomiappen-api
 ```
 
 #### 4. Testa installationen
@@ -162,21 +225,23 @@ EmailJS är ett annat alternativ som skickar e-post direkt via JavaScript:
 
 **Problem: "Connection refused" eller 500-fel**
 - Kontrollera att MySQL-servern körs: `sudo service mysql status`
-- Verifiera databasuppgifter i `api/subscribe.php`
-- Kolla PHP error log: `tail -f /var/log/apache2/error.log`
-
+- Kontrollera att API:et körs: `curl http://localhost:5000/health`
+- Verifiera connection string i `api/appsettings.local.json`
+- Kolla loggar: `journalctl -u ekonomiappen-api -f` (om systemd service)
 **Problem: CORS-fel i webbläsaren**
-- Se till att `api/subscribe.php` har rätt CORS-headers
+- Lägg till din domän i CORS-listan i `api/Program.cs`
+- För produktion, uppdatera `.WithOrigins()` med rätt domän
 - Om olika domäner, uppdatera `Access-Control-Allow-Origin`
 
 **Problem: E-post sparas inte**
 - Testa API:et direkt: 
   ```bash
-  curl -X POST http://localhost/api/subscribe.php \
+  curl -X POST http://localhost:5000/api/subscribe \
     -H "Content-Type: application/json" \
     -d '{"email":"test@example.com"}'
   ```
 - Kontrollera MySQL-behörigheter för användaren
+- Verifiera att connection string är korrekt
 
 **Problem: Dubbletter sparas**
 - Tabellen har UNIQUE constraint på email-kolumnen

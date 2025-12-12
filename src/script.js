@@ -32,7 +32,7 @@ themeBtn.addEventListener('click', () => {
   themeBtn.setAttribute('aria-pressed', next === 'dark' ? 'true' : 'false');
 });
 
-// Form för e-postnotifiering – med Formspree backend
+// Form för e-postnotifiering – med .NET API backend
 const form = qs('#notifyForm');
 const emailInput = qs('#emailInput');
 const formMessage = qs('#formMessage');

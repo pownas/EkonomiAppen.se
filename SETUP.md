@@ -176,7 +176,7 @@ UPDATE email_subscriptions SET unsubscribed_at = NOW() WHERE email = 'exempel@ma
 
 ### Fallback-lagring
 
-Om Formspree inte är tillgängligt sparas e-postadresser lokalt i användarens webbläsare (localStorage). 
+Om API:et inte är tillgängligt sparas e-postadresser lokalt i användarens webbläsare (localStorage). 
 Du kan läsa dessa genom utvecklarkonsolens kommandon:
 
 ```javascript

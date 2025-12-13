@@ -1,4 +1,4 @@
--- Skapa databas (om den inte finns)
+﻿-- Skapa databas (om den inte finns)
 CREATE DATABASE IF NOT EXISTS ekonomiappen
     CHARACTER SET utf8mb4 
     COLLATE utf8mb4_unicode_ci;

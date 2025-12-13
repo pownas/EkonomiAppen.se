@@ -1,5 +1,0 @@
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=ekonomiappen;User=your_username;Password=YOUR_PASSWORD_HERE;SSL Mode=None;"
-  }
-}

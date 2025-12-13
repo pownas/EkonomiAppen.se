@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Database/">
+    <File Path="Database/setup.sql" />
+  </Folder>
+  <Folder Name="/Frontend.html/">
+    <File Path="Frontend.html/favicon.png" />
+    <File Path="Frontend.html/index.html" />
+    <File Path="Frontend.html/placeholder-hero.png" />
+    <File Path="Frontend.html/script.js" />
+    <File Path="Frontend.html/styles.css" />
+  </Folder>
+  <Project Path="EkonomiAppen.Api/EkonomiAppen.Api.csproj" Id="c5434f33-d603-48ab-9a61-5bddbf0033d8" />
+</Solution>
